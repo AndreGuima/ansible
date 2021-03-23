@@ -7,7 +7,7 @@
         state: latest
       become: yes
 
-    - name: 'Cria o banco de dados MySQL'
+    - name: 'Cria o banco de dados MySQL DB'
       mysql_db:
         name: wordpress_db
         login_user: root
