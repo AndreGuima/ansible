@@ -12,3 +12,11 @@
         name: wordpress_db
         login_user: root
         state: present
+
+    - name: 'Cria usuário do MySQL DB'
+      mysql_user:
+        login_user: root
+        name: wordpress_user
+        password: 12345
+        priv: 'wordpress_db.*:ALL'
+        state: present

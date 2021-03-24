@@ -32,7 +32,6 @@ Vagrant.configure("2") do |config|
   config.vm.define "php5" do |php5|
     php5.vm.box = "ubuntu/trusty64"
     php5.vm.network "public_network", ip: "192.168.15.21"
-    php5.vm.disk :disk, size: "100GB", primary: true
 
     php5.vm.provider "virtualbox" do |vb|
       vb.name = "php5"
