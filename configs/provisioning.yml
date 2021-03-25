@@ -1,17 +1,42 @@
 ---
 - hosts: all
+
+  handlers:
+    - name: restart apache
+      service:
+        name: apache2
+        state: restarted
+      become: yes
+
   tasks:
-    - name: 'Instala pacotes de dependência do sistema operacional com php5'
+    - name: Add PHP 7 PPA repository
+      become: true
+      apt_repository:
+        repo: 'ppa:ondrej/php'
+
+    - name: Install PHP 7.3, Apache2 and Mysql 8.0 dependencies
       apt:
-        name: ['php5', 'apache2', 'libapache2-mod-php5', 'php5-gd', 'libssh2-php', 'php5-mcrypt', 'mysql-server-5.6', 'python-mysqldb', 'php5-mysql']
+        update_cache: yes
+        name:
+          - php7.3
+          - apache2
+          - libapache2-mod-php7.3
+          - php7.3-gd
+          - libssh2-1
+          - php7.3-ssh2
+          - php7.3-mysql
+          - php7.2-mysql
+          - php7.3-zip
+          - mysql-server-8.0
+          - python3-mysqldb
         state: latest
       become: yes
 
     - name: 'Cria o banco de dados MySQL DB'
       mysql_db:
         name: wordpress_db
-        login_user: root
         state: present
+      become: yes
 
     - name: 'Cria usuário do MySQL DB'
       mysql_user:
@@ -20,6 +45,7 @@
         password: 12345
         priv: 'wordpress_db.*:ALL'
         state: present
+      become: yes
 
     - name: 'Faz download do wordpress'
       get_url:
@@ -32,3 +58,29 @@
         dest: '/var/www/'
         remote_src: yes
       become: yes
+
+    - name: 'Copia o arquivo de configuração do wordpress'
+      copy:
+        src: '/var/www/wordpress/wp-config-sample.php'
+        dest: '/var/www/wordpress/wp-config.php'
+        remote_src: yes
+      become: yes
+
+    - name: 'Edita o arquivo de configuração do wordpress para conectar ao banco MySQL'
+      replace:
+        path: '/var/www/wordpress/wp-config.php'
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.value }}"
+      with_items:
+        - { regex: 'nome_do_banco_de_dados_aqui', value: 'wordpress_db'}
+        - { regex: 'nome_de_usuario_aqui', value: 'wordpress_user'}
+        - { regex: 'senha_aqui', value: '12345'}
+      become: yes
+
+    - name: 'Copia o arquivo de configuração do apache local para o server remoto'
+      copy:
+        src: '/configs/000-default.conf'
+        dest: '/etc/apache2/sites-available/000-default.conf'
+      become: yes
+      notify:
+        - restart apache

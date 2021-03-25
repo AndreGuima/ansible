@@ -11,6 +11,7 @@ Vagrant.configure("2") do |config|
     ansible.vm.network "public_network", ip: "192.168.15.20"
     ansible.vm.provider "virtualbox" do |vb|
       vb.name = "ansible"
+      vb.memory = 512
     end
 
     # Atualizando o sistema e instalando o Ansible
@@ -28,29 +29,24 @@ Vagrant.configure("2") do |config|
 
   end
 
-  # Criando a maquina php5
-  config.vm.define "php5" do |php5|
-    php5.vm.box = "ubuntu/trusty64"
-    php5.vm.network "public_network", ip: "192.168.15.21"
+  # Criando a maquina wordpress
+  config.vm.define "wordpress" do |wordpress|
 
-    php5.vm.provider "virtualbox" do |vb|
-      vb.name = "php5"
-      vb.memory = 1024
+    wordpress.vm.box = "bento/ubuntu-20.04"
+    wordpress.vm.network "public_network", ip: "192.168.15.21"
+
+    wordpress.vm.provider "virtualbox" do |vb|
+      vb.name = "wordpress"
     end
 
     # Copiando chave publica para dentro da maquina php5
-    php5.vm.provision "shell",
+    wordpress.vm.provision "shell",
       inline: "cat /configs/id_bionic.pub >> .ssh/authorized_keys"
-  end
 
-  # Criando a maquina wordpress
-  # config.vm.define "wordpress" do |wordpress|
-  #   wordpress.vm.network "public_network", ip: "192.168.15.22"
-  #   wordpress.vm.provider "virtualbox" do |vb|
-  #     vb.name = "wordpress"
-  #   end
-  #   wordpress.vm.provision "shell",
-  #     inline: "cat /configs/id_bionic.pub >> .ssh/authorized_keys"
-  # end
+    # Atualizando sistema operacional
+    wordpress.vm.provision "shell",
+      inline: "apt-get update"
+
+  end
 
 end
