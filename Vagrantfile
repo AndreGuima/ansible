@@ -31,6 +31,7 @@ Vagrant.configure("2") do |config|
       inline: "cp /configs/id_bionic /home/vagrant && \
                chmod 600 /home/vagrant/id_bionic && \
                chown vagrant:vagrant /home/vagrant/id_bionic"
+
   end
 
   # Criando a maquina wordpress
