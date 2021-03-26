@@ -2,7 +2,6 @@
 Vagrant.configure("2") do |config|
 
   config.vm.box = "ubuntu/bionic64"
-
   config.vm.synced_folder "./configs", "/configs"
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
@@ -21,17 +20,21 @@ Vagrant.configure("2") do |config|
                apt-add-repository --yes --update ppa:ansible/ansible && \
                apt install -y ansible"
 
-    # Copiando chave privada para dentro da maquina ansible
+    # Copiando a chave privada do wordpress para dentro da maquina ansible
+    ansible.vm.provision "shell",
+      inline: "cp /configs/id_wordpress /home/vagrant && \
+               chmod 600 /home/vagrant/id_wordpress && \
+               chown vagrant:vagrant /home/vagrant/id_wordpress"
+
+    # Copiando a chave privada do mysql para dentro da maquina ansible
     ansible.vm.provision "shell",
       inline: "cp /configs/id_bionic /home/vagrant && \
                chmod 600 /home/vagrant/id_bionic && \
                chown vagrant:vagrant /home/vagrant/id_bionic"
-
   end
 
   # Criando a maquina wordpress
   config.vm.define "wordpress" do |wordpress|
-
     wordpress.vm.box = "bento/ubuntu-20.04"
     wordpress.vm.network "public_network", ip: "192.168.15.21"
 
@@ -39,14 +42,31 @@ Vagrant.configure("2") do |config|
       vb.name = "wordpress"
     end
 
-    # Copiando chave publica para dentro da maquina php5
+    # Copiando chave publica para dentro da maquina wordpress
     wordpress.vm.provision "shell",
-      inline: "cat /configs/id_bionic.pub >> .ssh/authorized_keys"
+      inline: "cat /configs/id_wordpress.pub >> .ssh/authorized_keys"
 
     # Atualizando sistema operacional
     wordpress.vm.provision "shell",
       inline: "apt-get update"
+  end
 
+  # Criando a maquina mysql 8
+  config.vm.define "mysql" do |mysql|
+    mysql.vm.box = "bento/ubuntu-20.04"
+    mysql.vm.network "public_network", ip: "192.168.15.22"
+
+    mysql.vm.provider "virtualbox" do |vb|
+      vb.name = "mysql"
+    end
+
+    # Copiando chave publica para dentro da maquina mysql
+    mysql.vm.provision "shell",
+      inline: "cat /configs/id_bionic.pub >> .ssh/authorized_keys"
+
+    # Atualizando sistema operacional
+    mysql.vm.provision "shell",
+      inline: "apt-get update"
   end
 
 end

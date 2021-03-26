@@ -1,2 +1,5 @@
 [wordpress]
-192.168.15.21 ansible_user=vagrant ansible_ssh_private_key_file="/home/vagrant/id_bionic"
+192.168.15.21 ansible_user=vagrant ansible_ssh_private_key_file="/home/vagrant/id_wordpress"
+
+[database]
+192.168.15.22 ansible_user=vagrant ansible_ssh_private_key_file="/home/vagrant/id_bionic"

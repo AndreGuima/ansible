@@ -1,37 +1,21 @@
 ---
-- hosts: all
-
+- hosts: database
   handlers:
-    - name: restart apache
+    - name: restart mysql
       service:
-        name: apache2
+        name: mysql
         state: restarted
       become: yes
 
   tasks:
-    - name: Add PHP 7 PPA repository
-      become: true
-      apt_repository:
-        repo: 'ppa:ondrej/php'
-
-    - name: Install PHP 7.3, Apache2 and Mysql 8.0 dependencies
+    - name: Install Mysql 8.0 dependencies
       apt:
         update_cache: yes
         name:
-          - php7.3
-          - apache2
-          - libapache2-mod-php7.3
-          - php7.3-gd
-          - libssh2-1
-          - php7.3-ssh2
-          - php7.3-mysql
-          - php7.2-mysql
-          - php7.3-zip
           - mysql-server-8.0
           - python3-mysqldb
         state: latest
       become: yes
-
     - name: 'Cria o banco de dados MySQL DB'
       mysql_db:
         name: wordpress_db
@@ -45,6 +29,49 @@
         password: 12345
         priv: 'wordpress_db.*:ALL'
         state: present
+        host: "{{ item }}"
+      with_items:
+        - 'localhost'
+        - '127.0.0.1'
+        - '192.168.15.21'
+      become: yes
+
+    - name: 'Configura mysql para aceitar conexões remotas'
+      copy:
+        src: '/configs/mysqld.cnf'
+        dest: '/etc/mysql/mysql.conf.d/mysqld.cnf'
+      become: yes
+      notify:
+        - restart mysql
+
+- hosts: wordpress
+  handlers:
+    - name: restart apache
+      service:
+        name: apache2
+        state: restarted
+      become: yes
+
+  tasks:
+    - name: Add PHP 7 PPA repository
+      become: true
+      apt_repository:
+        repo: 'ppa:ondrej/php'
+
+    - name: Install PHP 7.3, Apache2 dependencies
+      apt:
+        update_cache: yes
+        name:
+          - php7.3
+          - apache2
+          - libapache2-mod-php7.3
+          - php7.3-gd
+          - libssh2-1
+          - php7.3-ssh2
+          - php7.3-mysql
+          - php7.3-zip
+          - python3-mysqldb
+        state: latest
       become: yes
 
     - name: 'Faz download do wordpress'
@@ -75,6 +102,7 @@
         - { regex: 'nome_do_banco_de_dados_aqui', value: 'wordpress_db'}
         - { regex: 'nome_de_usuario_aqui', value: 'wordpress_user'}
         - { regex: 'senha_aqui', value: '12345'}
+        - { regex: 'localhost', value: '192.168.15.22'}
       become: yes
 
     - name: 'Copia o arquivo de configuração do apache local para o server remoto'
