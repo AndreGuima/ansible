@@ -105,9 +105,9 @@
         - { regex: 'localhost', value: "{{ wp_db_ip }}"}
       become: yes
 
-    - name: 'Copia o arquivo de configuração do apache local para o server remoto'
-      copy:
-        src: '/configs/000-default.conf'
+    - name: 'Copia arquivo, Configura Apache para servir wordpress'
+      template:
+        src: '/configs/templates/000-default.conf.j2'
         dest: '/etc/apache2/sites-available/000-default.conf'
       become: yes
       notify:
