@@ -1,0 +1,21 @@
+---
+- name: Add PHP 7 PPA repository
+  become: true
+  apt_repository:
+    repo: 'ppa:ondrej/php'
+
+- name: Install PHP 7.3, Apache2 dependencies
+  apt:
+    update_cache: yes
+    name:
+      - php7.3
+      - apache2
+      - libapache2-mod-php7.3
+      - php7.3-gd
+      - libssh2-1
+      - php7.3-ssh2
+      - php7.3-mysql
+      - php7.3-zip
+      - python3-mysqldb
+    state: latest
+  become: yes  

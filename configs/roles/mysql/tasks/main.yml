@@ -1,0 +1,35 @@
+---
+- name: Install Mysql 8.0 dependencies
+  apt:
+    update_cache: yes
+    name:
+      - mysql-server-8.0
+      - python3-mysqldb
+    state: latest
+  become: yes
+
+- name: 'Cria o banco de dados MySQL DB'
+  mysql_db:
+    name: "{{ wp_db_name }}"
+    state: present
+  become: yes
+
+- name: 'Cria usuário do MySQL DB'
+  mysql_user:
+    login_user: root
+    name: "{{ wp_username }}"
+    password: "{{ wp_user_pass }}"
+    priv: "{{ wp_db_name }}.*:ALL"
+    state: present
+    host: "{{ item }}"
+  with_items:
+    - "{{ wp_host_ip }}"
+  become: yes
+
+- name: 'Configura mysql para aceitar conexões remotas'
+  copy:
+    src: '/configs/roles/mysql/files/mysqld.cnf'
+    dest: '/etc/mysql/mysql.conf.d/mysqld.cnf'
+  become: yes
+  notify:
+    - restart mysql

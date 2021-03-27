@@ -1,0 +1,39 @@
+---
+- name: 'Faz download do wordpress'
+  get_url:
+    url: 'https://br.wordpress.org/latest-pt_BR.tar.gz'
+    dest: '/tmp/wordpress.tar.gz'
+
+- name: 'Descompacta o arquivo do wordpress tar gz'
+  unarchive:
+    src: '/tmp/wordpress.tar.gz'
+    dest: '/var/www/'
+    remote_src: yes
+  become: yes
+
+- name: 'Copia o arquivo de configuração do wordpress'
+  copy:
+    src: "{{ wp_installation_dir }}/wp-config-sample.php"
+    dest: "{{ wp_installation_dir }}/wp-config.php"
+    remote_src: yes
+  become: yes
+
+- name: 'Edita o arquivo de configuração do wordpress para conectar ao banco MySQL'
+  replace:
+    path: "{{ wp_installation_dir }}/wp-config.php"
+    regexp: "{{ item.regex }}"
+    replace: "{{ item.value }}"
+  with_items:
+    - { regex: 'nome_do_banco_de_dados_aqui', value: "{{ wp_db_name }}"}
+    - { regex: 'nome_de_usuario_aqui', value: "{{ wp_username }}"}
+    - { regex: 'senha_aqui', value: "{{ wp_user_pass }}"}
+    - { regex: 'localhost', value: "{{ wp_db_ip }}"}
+  become: yes
+
+- name: 'Copia arquivo, Configura Apache para servir wordpress'
+  template:
+    src: '/configs/roles/wordpress/templates/000-default.conf.j2'
+    dest: '/etc/apache2/sites-available/000-default.conf'
+  become: yes
+  notify:
+    - restart apache
